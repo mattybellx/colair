@@ -121,8 +121,8 @@ ColairShaderPainter/
 ### Quick Start
 ```bash
 # Clone
-git clone https://github.com/YOUR_USERNAME/ColairShaderPainter.git
-cd ColairShaderPainter
+git clone https://github.com/mattybellx/colair.git
+cd colair
 
 # Build
 dotnet build
@@ -159,7 +159,7 @@ dotnet run
 - Export rendered shaders as videos
 
 ### 🤝 How You Can Help
-- **Try it!** — Launch the app, generate shaders, and [open an issue](https://github.com/YOUR_USERNAME/ColairShaderPainter/issues) if something breaks
+- **Try it!** — Launch the app, generate shaders, and [open an issue](https://github.com/mattybellx/colair/issues) if something breaks
 - **Suggest features** — What would make this more useful or fun?
 - **Fix bugs** — PRs are warmly welcomed
 - **Improve the AI prompts** — The system prompt that tells the AI how to write shaders could always be better
