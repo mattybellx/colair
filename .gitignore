@@ -1,0 +1,32 @@
+# 🚫 Build outputs
+bin/
+obj/
+*.exe
+*.dll
+*.pdb
+*.manifest
+*.config  # except appsettings.json template
+!appsettings.json
+
+# 🚫 IDE & editor files
+.vs/
+.vscode/
+*.user
+*.suo
+*.sln.docstates
+*.userosscache
+*.sln.docstates
+
+# 🚫 OS files
+Thumbs.db
+.DS_Store
+Desktop.ini
+
+# 🚫 Logs & temp
+*.log
+colair_*.txt
+colair_crash.log
+colair_gl.txt
+
+# 🚫 User settings (keep template, ignore actual)
+appsettings.Development.json

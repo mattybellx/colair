@@ -1,0 +1,666 @@
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     MainWindow.axaml — The Main Window Layout
+     
+     This XAML file defines the ENTIRE user interface of COLAIR.
+     
+     Layout structure (4 rows in the main Grid):
+       Row 0: Custom title bar (44px) — app name, drag region, min/close buttons
+       Row 1: Toolbar (40px) — quality selector, zoom slider, settings button
+       Row 2: Main content (* = fills remaining space) — GPU viewport + parameter panel
+       Row 3: Prompt bar (72px) — text input, generate button, status indicator
+     
+     Overlays (on top of everything, using ZIndex):
+       - AI generating overlay (ZIndex=100) — "AI Tuning Visuals..."
+       - Settings overlay (ZIndex=200) — full modal with tabs
+     
+     Key concepts:
+       - xmlns:vm — imports our ViewModels namespace for data binding
+       - xmlns:graphics — imports our Graphics namespace for the GL viewport
+       - {Binding PropertyName} — data binding: connects UI to ViewModel properties
+       - {StaticResource BrushName} — references named colors from ColairTheme.axaml
+       - ExtendClientAreaToDecorationsHint — removes the standard window chrome
+         for a custom dark title bar
+     
+     The UI uses a "glassmorphism" dark theme with:
+       - Dark navy/black backgrounds
+       - Purple (violet) accent colors for interactive elements
+       - Semi-transparent glass-like panels
+       - Cyan secondary accents for status indicators
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:ColairShaderPainter.ViewModels"
+        xmlns:graphics="using:ColairShaderPainter.Graphics"
+        x:Class="ColairShaderPainter.Views.MainWindow"
+        Title="COLAIR — Self-Healing AI Shader Matte Painter"
+        Width="1440" Height="900"
+        MinWidth="900" MinHeight="600"
+        WindowStartupLocation="CenterScreen"
+        ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaChromeHints="NoChrome"
+        Background="{StaticResource AppBgBrush}">
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         MAIN GRID
+         Row 0: Custom title bar (44 px)
+         Row 1: Toolbar (40 px)
+         Row 2: Viewport + Parameter panel (flex)
+         Row 3: Prompt input bar (72 px)
+    ════════════════════════════════════════════════════════════════════════ -->
+    <Grid RowDefinitions="44,40,*,72">
+
+        <!-- ── TITLE BAR ─────────────────────────────────────────────────── -->
+        <Border x:Name="TitleBar" Grid.Row="0"
+                Background="{StaticResource TitleBarBrush}"
+                IsHitTestVisible="True">
+            <Grid ColumnDefinitions="Auto,*,Auto"
+                  Margin="16,0">
+
+                <!-- App name + version badge -->
+                <StackPanel Grid.Column="0"
+                            Orientation="Horizontal"
+                            VerticalAlignment="Center"
+                            Spacing="10">
+                    <TextBlock Text="COLAIR"
+                               Classes="title"
+                               VerticalAlignment="Center" />
+                    <Border Background="#331A1A30"
+                            CornerRadius="4"
+                            Padding="6,2">
+                        <TextBlock Text="v2.0 ULTRA"
+                                   Classes="caption"
+                                   Foreground="{StaticResource SecondaryLightBrush}"
+                                   VerticalAlignment="Center" />
+                    </Border>
+                </StackPanel>
+
+                <!-- Drag region -->
+                <Border Grid.Column="1" Background="Transparent" />
+
+                <!-- Window controls -->
+                <StackPanel Grid.Column="2"
+                            Orientation="Horizontal"
+                            VerticalAlignment="Center"
+                            Spacing="8">
+                    <Button x:Name="MinBtn"
+                            Content="─"
+                            Width="32" Height="28"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Foreground="{StaticResource TextSecondaryBrush}"
+                            Cursor="Hand" />
+                    <Button x:Name="CloseBtn"
+                            Content="✕"
+                            Width="32" Height="28"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Foreground="{StaticResource TextSecondaryBrush}"
+                            Cursor="Hand" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ── TOOLBAR ───────────────────────────────────────────────────── -->
+        <Border x:Name="Toolbar" Grid.Row="1"
+                Background="{StaticResource SurfaceBgBrush}"
+                BorderBrush="{StaticResource GlassBorder}"
+                BorderThickness="0,0,0,1">
+            <Grid ColumnDefinitions="Auto,*,Auto"
+                  Margin="12,0">
+
+                <!-- Left: quality selector + zoom -->
+                <StackPanel Grid.Column="0"
+                            Orientation="Horizontal"
+                            Spacing="8"
+                            VerticalAlignment="Center">
+                    <TextBlock Text="QUALITY"
+                               Classes="caption"
+                               VerticalAlignment="Center" />
+                    <ComboBox SelectedIndex="{Binding QualityIndex}"
+                              Width="130"
+                              VerticalAlignment="Center">
+                        <ComboBoxItem Content="✦ Native (1x)" />
+                        <ComboBoxItem Content="✦ HD (1.5x)" />
+                        <ComboBoxItem Content="✦ Ultra HD (2x)" />
+                    </ComboBox>
+                    <Separator Width="12" Height="20" />
+                    <TextBlock Text="ZOOM"
+                               Classes="caption"
+                               VerticalAlignment="Center" />
+                    <Slider Value="{Binding ZoomFactor}"
+                            Minimum="0.5" Maximum="3.0"
+                            Width="100"
+                            VerticalAlignment="Center"
+                            TickFrequency="0.1"
+                            IsSnapToTickEnabled="False" />
+                    <TextBlock Text="{Binding ZoomFactor, StringFormat={}{0:F1}x}"
+                               Classes="secondary"
+                               Width="30"
+                               VerticalAlignment="Center" />
+                </StackPanel>
+
+                <!-- Spacer -->
+                <Border Grid.Column="1" Background="Transparent" />
+
+                <!-- Right: toolbar actions -->
+                <StackPanel Grid.Column="2"
+                            Orientation="Horizontal"
+                            Spacing="4"
+                            VerticalAlignment="Center">
+
+                    <!-- Fullscreen button -->
+                    <Button x:Name="FullscreenBtn"
+                            Classes="toolbar-icon"
+                            Content="⛶"
+                            ToolTip.Tip="Fullscreen (F11)" />
+
+                    <!-- Settings cog -->
+                    <Button x:Name="SettingsBtn"
+                            Classes="toolbar-icon"
+                            Command="{Binding OpenSettingsCommand}"
+                            Content="⚙"
+                            ToolTip.Tip="Settings"
+                            FontSize="18" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ── MAIN CONTENT: Viewport + Right Panel ──────────────────────── -->
+        <Grid x:Name="MainContent" Grid.Row="2" ColumnDefinitions="*,300">
+
+            <!-- Live GPU viewport — fills entire left column with no margins/padding -->
+            <graphics:GlShaderViewport x:Name="ShaderViewport"
+                                       Grid.Column="0"
+                                       HorizontalAlignment="Stretch"
+                                       VerticalAlignment="Stretch"
+                                       ClipToBounds="True" />
+
+            <!-- Right panel: glass parameter sidebar -->
+            <Border Grid.Column="1"
+                    Background="{StaticResource GlassPanelBg}"
+                    BorderBrush="{StaticResource GlassBorder}"
+                    BorderThickness="1,0,0,0">
+
+                <DockPanel Margin="0">
+
+                    <!-- Panel header -->
+                    <Border DockPanel.Dock="Top"
+                            Padding="16,12"
+                            BorderBrush="{StaticResource GlassBorder}"
+                            BorderThickness="0,0,0,1">
+                        <StackPanel Spacing="2">
+                            <TextBlock Text="PARAMETERS"
+                                       Classes="caption" />
+                            <TextBlock Text="Uniform controls"
+                                       Classes="secondary" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Scrollable uniform list -->
+                    <ScrollViewer DockPanel.Dock="Top"
+                                  VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled">
+
+                        <ItemsControl ItemsSource="{Binding UniformParameters}"
+                                      Margin="0,4">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="vm:UniformParameterViewModel">
+                                    <!-- Glass uniform card -->
+                                    <Border Margin="10,4"
+                                            Padding="12,10"
+                                            Background="{StaticResource CardBgBrush}"
+                                            BorderBrush="{StaticResource GlassBorder}"
+                                            BorderThickness="1"
+                                            CornerRadius="10">
+                                        <StackPanel Spacing="6">
+
+                                            <!-- Uniform display name -->
+                                            <TextBlock Text="{Binding DisplayName}"
+                                                       FontSize="12"
+                                                       FontWeight="Medium"
+                                                       Foreground="{StaticResource AccentLightBrush}" />
+
+                                            <!-- FLOAT: single slider -->
+                                            <StackPanel IsVisible="{Binding IsFloat}" Spacing="4">
+                                                <Grid ColumnDefinitions="*,40">
+                                                    <Slider Grid.Column="0"
+                                                            Value="{Binding FloatValue}"
+                                                            Minimum="{Binding Min}"
+                                                            Maximum="{Binding Max}"
+                                                            TickFrequency="0.01"
+                                                            IsSnapToTickEnabled="False" />
+                                                    <TextBlock Grid.Column="1"
+                                                               Text="{Binding FloatValue, StringFormat={}{0:F2}}"
+                                                               Classes="secondary"
+                                                               VerticalAlignment="Center"
+                                                               HorizontalAlignment="Right" />
+                                                </Grid>
+                                            </StackPanel>
+
+                                            <!-- VEC3: R/G/B sliders -->
+                                            <StackPanel IsVisible="{Binding IsVec3}" Spacing="3">
+                                                <Grid ColumnDefinitions="14,*,36">
+                                                    <TextBlock Text="R" FontSize="10" FontWeight="Bold"
+                                                               Foreground="#FFFF6680" VerticalAlignment="Center" />
+                                                    <Slider Grid.Column="1" Value="{Binding R}"
+                                                            Minimum="0" Maximum="1"
+                                                            TickFrequency="0.01"
+                                                            IsSnapToTickEnabled="False" />
+                                                    <TextBlock Grid.Column="2"
+                                                               Text="{Binding R, StringFormat={}{0:F2}}"
+                                                               Classes="secondary"
+                                                               VerticalAlignment="Center"
+                                                               HorizontalAlignment="Right" />
+                                                </Grid>
+                                                <Grid ColumnDefinitions="14,*,36">
+                                                    <TextBlock Text="G" FontSize="10" FontWeight="Bold"
+                                                               Foreground="#FF66FF88" VerticalAlignment="Center" />
+                                                    <Slider Grid.Column="1" Value="{Binding G}"
+                                                            Minimum="0" Maximum="1"
+                                                            TickFrequency="0.01"
+                                                            IsSnapToTickEnabled="False" />
+                                                    <TextBlock Grid.Column="2"
+                                                               Text="{Binding G, StringFormat={}{0:F2}}"
+                                                               Classes="secondary"
+                                                               VerticalAlignment="Center"
+                                                               HorizontalAlignment="Right" />
+                                                </Grid>
+                                                <Grid ColumnDefinitions="14,*,36">
+                                                    <TextBlock Text="B" FontSize="10" FontWeight="Bold"
+                                                               Foreground="#FF8899FF" VerticalAlignment="Center" />
+                                                    <Slider Grid.Column="1" Value="{Binding B}"
+                                                            Minimum="0" Maximum="1"
+                                                            TickFrequency="0.01"
+                                                            IsSnapToTickEnabled="False" />
+                                                    <TextBlock Grid.Column="2"
+                                                               Text="{Binding B, StringFormat={}{0:F2}}"
+                                                               Classes="secondary"
+                                                               VerticalAlignment="Center"
+                                                               HorizontalAlignment="Right" />
+                                                </Grid>
+                                            </StackPanel>
+
+                                            <!-- BOOL: toggle -->
+                                            <ToggleSwitch IsVisible="{Binding IsBool}"
+                                                          IsChecked="{Binding BoolValue}" />
+
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                    </ScrollViewer>
+
+                    <!-- Empty-state hint: only visible when UniformParameters collection is empty.
+                         IsVisible binding uses a negated count check via HasNoParameters property. -->
+                    <TextBlock Text="No parameters yet.&#10;Generate a shader to&#10;populate controls."
+                               Classes="secondary"
+                               TextAlignment="Center"
+                               Margin="16,24"
+                               IsVisible="{Binding HasNoParameters}" />
+
+                </DockPanel>
+            </Border>
+        </Grid>
+
+        <!-- ── BOTTOM PROMPT BAR ──────────────────────────────────────────── -->
+        <Border x:Name="PromptBar" Grid.Row="3"
+                Background="{StaticResource TitleBarBrush}"
+                BorderBrush="{StaticResource GlassBorder}"
+                BorderThickness="0,1,0,0">
+
+            <Grid ColumnDefinitions="*,Auto,Auto"
+                  Margin="14,10">
+
+                <!-- Prompt TextBox -->
+                <TextBox Grid.Column="0"
+                         Text="{Binding UserPrompt}"
+                         Watermark="Describe a visual concept... (e.g. a cosmic black hole devouring a fractal galaxy)"
+                         AcceptsReturn="False"
+                         Margin="0,0,10,0"
+                         VerticalAlignment="Center" />
+
+                <!-- Generate / Cancel button -->
+                <Button Grid.Column="1"
+                        Classes="primary"
+                        Command="{Binding GenerateCommand}"
+                        Content="{Binding GenerateButtonText}"
+                        VerticalAlignment="Center"
+                        Margin="0,0,10,0" />
+
+                <!-- Status indicator
+                     Shows colored dot + status text.
+                     Green dot = ready/success, Red dot = error state -->
+                <StackPanel Grid.Column="2"
+                            Orientation="Horizontal"
+                            Spacing="6"
+                            VerticalAlignment="Center"
+                            MinWidth="180">
+
+                    <!-- Two overlapping dots: green (no error) and red (error).
+                         IsVisible toggles which one shows based on HasError/HasNoError.
+                         This avoids needing a value converter for color binding. -->
+                    <Ellipse Width="8" Height="8"
+                             VerticalAlignment="Center"
+                             Fill="{StaticResource SuccessBrush}"
+                             IsVisible="{Binding HasNoError}" />
+                    <Ellipse Width="8" Height="8"
+                             VerticalAlignment="Center"
+                             Fill="{StaticResource ErrorBrush}"
+                             IsVisible="{Binding HasError}" />
+
+                    <TextBlock Text="{Binding StatusMessage}"
+                               Classes="secondary"
+                               VerticalAlignment="Center"
+                               TextTrimming="CharacterEllipsis"
+                               MaxWidth="160" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- AI Tuning overlay (ZIndex=100) -->
+        <Border Grid.Row="2" Grid.Column="0"
+                IsVisible="{Binding IsGenerating}"
+                Background="#880A0A18"
+                ZIndex="100">
+            <StackPanel HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Spacing="16">
+                <TextBlock Text="⚡ AI Tuning Visuals..."
+                           FontSize="22"
+                           FontWeight="Light"
+                           LetterSpacing="4"
+                           HorizontalAlignment="Center"
+                           Foreground="{StaticResource AccentLightBrush}" />
+                <ProgressBar IsIndeterminate="True"
+                             Width="240"
+                             HorizontalAlignment="Center" />
+                <TextBlock Text="{Binding StatusMessage}"
+                           Classes="secondary"
+                           HorizontalAlignment="Center"
+                           TextTrimming="CharacterEllipsis"
+                           MaxWidth="300" />
+            </StackPanel>
+        </Border>
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             SETTINGS OVERLAY (ZIndex=200)
+             Full glass backdrop + centered modal panel
+        ════════════════════════════════════════════════════════════════════ -->
+        <Grid Grid.RowSpan="4"
+              IsVisible="{Binding IsSettingsOpen}"
+              ZIndex="200">
+
+            <!-- Backdrop -->
+            <Border Background="#88000000" />
+
+            <!-- Settings modal -->
+            <Border Width="680"
+                    MaxHeight="700"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Background="{StaticResource CardBgBrush}"
+                    BorderBrush="{StaticResource AccentBrush}"
+                    BorderThickness="1"
+                    CornerRadius="16"
+                    BoxShadow="0 0 60 0 #447C5CF6">
+
+                <DockPanel>
+
+                    <!-- Header -->
+                    <Border DockPanel.Dock="Top"
+                            Padding="24,16"
+                            BorderBrush="{StaticResource GlassBorder}"
+                            BorderThickness="0,0,0,1">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <TextBlock Grid.Column="0"
+                                       Text="SETTINGS"
+                                       Classes="title"
+                                       FontSize="16"
+                                       VerticalAlignment="Center" />
+                            <Border Grid.Column="1" Background="Transparent" />
+                            <Button Grid.Column="2"
+                                    Classes="toolbar-icon"
+                                    Command="{Binding CloseSettingsCommand}"
+                                    Content="✕"
+                                    FontSize="16"
+                                    ToolTip.Tip="Close" />
+                        </Grid>
+                    </Border>
+
+                    <!-- Tab labels -->
+                    <StackPanel DockPanel.Dock="Top"
+                                Orientation="Horizontal"
+                                Margin="24,14,24,0"
+                                Spacing="6">
+                        <Border x:Name="ProvidersTabBtn"
+                                Padding="14,8"
+                                CornerRadius="8"
+                                Background="{StaticResource AccentBrush}"
+                                Cursor="Hand">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <TextBlock Text="🔌" FontSize="13" />
+                                <TextBlock x:Name="ProvidersTabLabel"
+                                           Text="Providers"
+                                           FontSize="12"
+                                           FontWeight="SemiBold" />
+                            </StackPanel>
+                        </Border>
+                        <Border x:Name="RenderingTabBtn"
+                                Padding="14,8"
+                                CornerRadius="8"
+                                Background="Transparent"
+                                Cursor="Hand">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <TextBlock Text="🎨" FontSize="13" />
+                                <TextBlock x:Name="RenderingTabLabel"
+                                           Text="Rendering"
+                                           FontSize="12"
+                                           Foreground="{StaticResource TextSecondaryBrush}" />
+                            </StackPanel>
+                        </Border>
+                        <Border x:Name="AboutTabBtn"
+                                Padding="14,8"
+                                CornerRadius="8"
+                                Background="Transparent"
+                                Cursor="Hand">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <TextBlock Text="ℹ" FontSize="13" />
+                                <TextBlock x:Name="AboutTabLabel"
+                                           Text="About"
+                                           FontSize="12"
+                                           Foreground="{StaticResource TextSecondaryBrush}" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- Tab content -->
+                    <ScrollViewer DockPanel.Dock="Top"
+                                  VerticalScrollBarVisibility="Auto"
+                                  Margin="0,2,0,0">
+                        <StackPanel Spacing="0">
+
+                        <!-- ──── PROVIDERS TAB ──── -->
+                        <StackPanel x:Name="ProvidersPanel"
+                                    Margin="24,12,24,16"
+                                    Spacing="14">
+
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="Active Provider"
+                                           Classes="caption" />
+                                <ComboBox SelectedItem="{Binding Settings.ActiveProviderKey}"
+                                          ItemsSource="{Binding Settings.ProviderKeys}"
+                                          Width="240" />
+                            </StackPanel>
+
+                            <Separator />
+
+                            <ItemsControl ItemsSource="{Binding Settings.ProviderCards}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="vm:ProviderCardViewModel">
+                                        <Border Padding="16,14"
+                                                Margin="0,0,0,10"
+                                                Background="{StaticResource SurfaceBgBrush}"
+                                                BorderBrush="{StaticResource GlassBorder}"
+                                                BorderThickness="1"
+                                                CornerRadius="12">
+                                            <StackPanel Spacing="12">
+                                                <!-- Header row -->
+                                                <Grid ColumnDefinitions="Auto,*,Auto">
+                                                    <TextBlock Grid.Column="0"
+                                                               Text="{Binding Icon}"
+                                                               FontSize="22"
+                                                               VerticalAlignment="Center" />
+                                                    <StackPanel Grid.Column="1"
+                                                                VerticalAlignment="Center"
+                                                                Margin="10,0,0,0">
+                                                        <TextBlock Text="{Binding Name}"
+                                                                   FontSize="14"
+                                                                   FontWeight="SemiBold" />
+                                                    </StackPanel>
+                                                    <Border Grid.Column="2"
+                                                            Padding="10,4"
+                                                            CornerRadius="6"
+                                                            BorderBrush="{StaticResource GlassBorder}"
+                                                            BorderThickness="1"
+                                                            VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding StatusText}"
+                                                                   FontSize="11"
+                                                                   Foreground="{StaticResource SecondaryLightBrush}" />
+                                                    </Border>
+                                                </Grid>
+
+                                                <!-- API Key -->
+                                                <TextBox Text="{Binding ApiKey}"
+                                                         Watermark="Enter API key..."
+                                                         FontSize="12"
+                                                         FontFamily="Consolas, monospace" />
+
+                                                <!-- Model selector + Test button -->
+                                                <Grid ColumnDefinitions="*,Auto">
+                                                    <ComboBox Grid.Column="0"
+                                                              SelectedItem="{Binding SelectedModel}"
+                                                              ItemsSource="{Binding AvailableModels}"
+                                                              Margin="0,0,10,0" />
+                                                    <Button Grid.Column="1"
+                                                            Classes="toolbar-icon"
+                                                            Command="{Binding TestConnectionCommand}"
+                                                            IsEnabled="{Binding CanTest}"
+                                                            Width="90"
+                                                            Height="32"
+                                                            CornerRadius="8"
+                                                            BorderBrush="{StaticResource ControlBorderBrush}"
+                                                            BorderThickness="1"
+                                                            FontSize="11">
+                                                        <StackPanel Orientation="Horizontal" Spacing="4"
+                                                                    VerticalAlignment="Center"
+                                                                    HorizontalAlignment="Center">
+                                                            <TextBlock Text="🔗" FontSize="12" />
+                                                            <TextBlock Text="Test" FontSize="11"
+                                                                       Foreground="{StaticResource SecondaryLightBrush}" />
+                                                        </StackPanel>
+                                                    </Button>
+                                                </Grid>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+
+                        <!-- ──── RENDERING TAB ────
+                             NOTE: SSAA quality and MaxRetries are managed in the
+                             MainWindowViewModel / SettingsViewModel. These controls
+                             are set up for future data binding — when the SettingsViewModel
+                             exposes the SsaaFactor and MaxRetries as proper bindable
+                             properties, update the bindings here.
+                             For now, quality is adjusted via the main toolbar combo. -->
+                        <StackPanel x:Name="RenderingPanel"
+                                    IsVisible="False"
+                                    Margin="24,12,24,16"
+                                    Spacing="16">
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="SSAA Anti-Aliasing"
+                                           Classes="caption" />
+                                <TextBlock Text="Higher values = sharper edges, more GPU load"
+                                           Classes="secondary" />
+                                <!-- ⚠️ TODO: Bind to Settings.SsaaFactor when
+                                     SettingsViewModel exposes a QualityIndex property
+                                     Currently quality is controlled via the main toolbar -->
+                                <ComboBox SelectedIndex="1" Width="240"
+                                          IsEnabled="False"
+                                          ToolTip.Tip="Use the quality selector in the main toolbar">
+                                    <ComboBoxItem Content="Native (1x) — Fast" />
+                                    <ComboBoxItem Content="HD (1.5x) — Balanced" />
+                                    <ComboBoxItem Content="Ultra HD (2x) — Best Quality" />
+                                </ComboBox>
+                            </StackPanel>
+                            <Separator />
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="Max AI Retries"
+                                           Classes="caption" />
+                                <TextBlock Text="Number of self-healing attempts before giving up"
+                                           Classes="secondary" />
+                                <!-- ⚠️ TODO: Bind to Settings.MaxRetries when added to SettingsViewModel
+                                     For now retries are managed via appsettings.json -->
+                                <TextBox Text="5"
+                                         Width="80" IsEnabled="False"
+                                         ToolTip.Tip="Max AI retries — set in appsettings.json" />
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- ──── ABOUT TAB ──── -->
+                        <StackPanel x:Name="AboutPanel"
+                                    IsVisible="False"
+                                    Margin="24,12,24,16"
+                                    Spacing="12">
+                            <TextBlock Text="COLAIR v2.0 ULTRA"
+                                       FontSize="22"
+                                       FontWeight="Bold"
+                                       Foreground="{StaticResource AccentLightBrush}" />
+                            <TextBlock Text="Self-Healing AI Shader Matte Painter"
+                                       Classes="secondary"
+                                       FontSize="13" />
+                            <TextBlock Text="GPU-accelerated procedural art driven by LLM code generation. Enter a visual concept and the AI generates a GLSL fragment shader — compiled live on your GPU with automatic self-healing error recovery."
+                                       Classes="secondary"
+                                       TextWrapping="Wrap" />
+                            <Separator />
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Built with"
+                                           Classes="caption" />
+                                <TextBlock Text="Avalonia UI 11 + Silk.NET OpenGL + .NET 9"
+                                           Classes="secondary" />
+                            </StackPanel>
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Supported Providers"
+                                           Classes="caption" />
+                                <TextBlock Text="OpenAI — Anthropic Claude — DeepSeek"
+                                           Classes="secondary" />
+                            </StackPanel>
+                        </StackPanel>
+
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!-- Footer -->
+                    <Border DockPanel.Dock="Bottom"
+                            Padding="24,12"
+                            BorderBrush="{StaticResource GlassBorder}"
+                            BorderThickness="0,1,0,0">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Border Grid.Column="0" Background="Transparent" />
+                            <Button Grid.Column="1"
+                                    Classes="primary"
+                                    Command="{Binding Settings.SaveAndCloseCommand}"
+                                    Content="✅ Save + Close"
+                                    Padding="20,8" />
+                        </Grid>
+                    </Border>
+
+                </DockPanel>
+            </Border>
+        </Grid>
+
+    </Grid>
+</Window>

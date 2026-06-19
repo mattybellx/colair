@@ -1,0 +1,78 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- ═══════════════════════════════════════════════════════════════════════════
+       ColairShaderPainter.csproj — Project Configuration
+       
+       This is the MSBuild project file. It tells .NET:
+         - What kind of app this is (Exe = desktop executable)
+         - Which .NET version to use (net9.0)
+         - What NuGet packages to download and reference
+         - Special compiler settings (nullable, unsafe blocks)
+         - What files to include as embedded resources
+       
+       .csproj = C# Project file. It's an XML file that MSBuild reads to
+       understand how to build the project.
+       ═══════════════════════════════════════════════════════════════════════════ -->
+  <PropertyGroup>
+    <!-- OutputType = Exe means this produces a .exe file (desktop application) -->
+    <OutputType>Exe</OutputType>
+    
+    <!-- TargetFramework = net9.0 means we use .NET 9 -->
+    <TargetFramework>net9.0</TargetFramework>
+    
+    <!-- Nullable = enable means the compiler checks for null-reference errors -->
+    <Nullable>enable</Nullable>
+    
+    <!-- ImplicitUsings = enable auto-imports common namespaces (System, etc.) -->
+    <ImplicitUsings>enable</ImplicitUsings>
+    
+    <!-- AllowUnsafeBlocks = true allows 'unsafe' code (needed for Silk.NET's
+         raw pointer access to GPU memory) -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    
+    <RootNamespace>ColairShaderPainter</RootNamespace>
+    <AssemblyName>ColairShaderPainter</AssemblyName>
+    <Version>2.0.0</Version>
+    <Authors>Colair AI</Authors>
+    <Description>Self-Healing AI Shader Matte Painter v2 — GPU-accelerated procedural art with multi-LLM orchestration, SSAA, and glassmorphism UI.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         NuGet Package Dependencies
+         
+         NuGet is .NET's package manager — like npm for JavaScript or pip for Python.
+         These packages are downloaded from nuget.org when you build the project.
+         
+         Avalonia: Cross-platform UI framework (like WPF but works on Mac/Linux too)
+         Silk.NET: Modern OpenGL bindings for .NET (lets C# talk to your GPU)
+         Microsoft.Extensions.*: Standard .NET libraries for DI, config, HTTP
+         ═══════════════════════════════════════════════════════════════════════ -->
+    
+    <!-- Avalonia UI Framework — the GUI toolkit that renders our window -->
+    <PackageReference Include="Avalonia"                  Version="11.2.7" />
+    <PackageReference Include="Avalonia.Desktop"          Version="11.2.7" />
+    <PackageReference Include="Avalonia.Themes.Fluent"    Version="11.2.7" />
+    <PackageReference Include="Avalonia.Fonts.Inter"      Version="11.2.7" />
+
+    <!-- GPU / OpenGL bindings via Silk.NET — lets us call OpenGL from C# -->
+    <PackageReference Include="Silk.NET.OpenGL"           Version="2.22.0" />
+
+    <!-- Microsoft.Extensions — Dependency Injection, HTTP, and JSON config -->
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.5" />
+    <PackageReference Include="Microsoft.Extensions.Http"                Version="9.0.5" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json"  Version="9.0.5" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="9.0.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Embed AXAML styles as Avalonia resources (compiled into the .exe) -->
+    <AvaloniaResource Include="Assets/**" />
+    
+    <!-- Copy appsettings.json alongside the .exe so it can be read at runtime -->
+    <None Include="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

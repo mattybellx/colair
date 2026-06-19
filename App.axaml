@@ -1,0 +1,32 @@
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     App.axaml — Application Resources & Styles
+     
+     This XAML file defines the application-level resources and styles.
+     
+     Key points:
+       - RequestedThemeVariant="Dark" — the app uses a dark UI theme
+       - FluentTheme — the base Avalonia theme (modern Windows-style look)
+       - ColairTheme.axaml — our custom dark theme with neon/glassmorphism styling
+     
+     XAML (eXtensible Application Markup Language) is a markup language for
+     defining UIs. It's like HTML for desktop apps — you declare what controls
+     you want (buttons, text boxes, etc.) and how they're arranged.
+     
+     The "xmlns" attributes are XML namespaces — they tell the XAML parser
+     where to find the definitions for Avalonia controls (like Window, Button,
+     TextBlock, etc.).
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="ColairShaderPainter.App"
+             RequestedThemeVariant="Dark">
+
+    <!-- Application-wide styles:
+         FluentTheme = Base Avalonia theme (provides default control styles)
+         ColairTheme = Our custom theme (colors, glass effects, neon accents) -->
+    <Application.Styles>
+        <FluentTheme />
+        <StyleInclude Source="avares://ColairShaderPainter/Assets/Styles/ColairTheme.axaml" />
+    </Application.Styles>
+
+</Application>

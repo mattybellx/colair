@@ -1,0 +1,207 @@
+﻿<!-- ═══════════════════════════════════════════════════════════════════════════
+     ColairTheme.axaml — Dark Neon / Glassmorphism Theme
+     
+     This file defines the entire visual style of the COLAIR application:
+     
+     COLORS (the palette):
+       VoidBg        → Near-black (#020205) — deepest background
+       SurfaceBg     → Dark navy (#070712) — panels and surfaces
+       CardBg        → Slightly lighter (#0C0C1E) — parameter cards
+       ControlBg     → Medium dark (#161630) — text boxes, combo boxes
+       AccentViolet  → Purple (#8B5CF6) — primary accent (glows, buttons)
+       AccentCyan    → Cyan (#06B6D4) — secondary accent
+       AccentGold    → Amber (#F59E0B) — highlights
+       AccentPink    → Pink (#EC4899) — decorative accents
+       ...and text colors ranging from bright (#E8E8FF) to dim (#555570)
+     
+     BRUSHES (named resources referenced by XAML throughout the app):
+       AppBgBrush, SurfaceBgBrush, CardBgBrush, AccentBrush, etc.
+       LinearGradientBrush for glass panels, title bar, and button backgrounds
+     
+     STYLES (overriding default control appearances):
+       Window, TextBlock, Slider, TextBox, Button, ComboBox, etc.
+       Each style uses CSS-like selectors and sets properties like
+       Background, Foreground, BorderBrush, CornerRadius, etc.
+     
+     This is where the app gets its distinctive "dark neon glassmorphism" look.
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       Resources — named colors and brushes that can be used throughout the app
+       via {StaticResource ColorName} in XAML.
+       
+       Think of this like a paint palette: we define the colors here, then
+       reference them by name everywhere else. If we want to change the
+       theme, we only change the colors here.
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <Styles.Resources>
+    <Color x:Key="VoidBg">#FF020205</Color>
+    <Color x:Key="SurfaceBg">#FF070712</Color>
+    <Color x:Key="CardBg">#FF0C0C1E</Color>
+    <Color x:Key="ControlBg">#FF161630</Color>
+    <Color x:Key="ControlBorder">#FF2A2A50</Color>
+    <Color x:Key="AccentViolet">#FF8B5CF6</Color>
+    <Color x:Key="AccentVioletLight">#FFA78BFA</Color>
+    <Color x:Key="AccentCyan">#FF06B6D4</Color>
+    <Color x:Key="AccentCyanLight">#FF22D3EE</Color>
+    <Color x:Key="AccentGold">#FFF59E0B</Color>
+    <Color x:Key="AccentPink">#FFEC4899</Color>
+    <Color x:Key="TextPrimary">#FFE8E8FF</Color>
+    <Color x:Key="TextSecondary">#FF9999BB</Color>
+    <Color x:Key="TextDim">#FF555570</Color>
+    <Color x:Key="ErrorRed">#FFF43F5E</Color>
+    <Color x:Key="SuccessGreen">#FF22EE88</Color>
+    <Color x:Key="WarningAmber">#FFFBBF24</Color>
+
+    <SolidColorBrush x:Key="AppBgBrush" Color="{StaticResource VoidBg}" />
+    <SolidColorBrush x:Key="SurfaceBgBrush" Color="{StaticResource SurfaceBg}" />
+    <SolidColorBrush x:Key="PanelBgBrush" Color="{StaticResource SurfaceBg}" />
+    <SolidColorBrush x:Key="CardBgBrush" Color="{StaticResource CardBg}" />
+    <SolidColorBrush x:Key="ControlBgBrush" Color="{StaticResource ControlBg}" />
+    <SolidColorBrush x:Key="ControlBorderBrush" Color="{StaticResource ControlBorder}" />
+    <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentViolet}" />
+    <SolidColorBrush x:Key="AccentLightBrush" Color="{StaticResource AccentVioletLight}" />
+    <SolidColorBrush x:Key="SecondaryBrush" Color="{StaticResource AccentCyan}" />
+    <SolidColorBrush x:Key="SecondaryLightBrush" Color="{StaticResource AccentCyanLight}" />
+    <SolidColorBrush x:Key="PinkBrush" Color="{StaticResource AccentPink}" />
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="{StaticResource TextPrimary}" />
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondary}" />
+    <SolidColorBrush x:Key="TextDimBrush" Color="{StaticResource TextDim}" />
+    <SolidColorBrush x:Key="ErrorBrush" Color="{StaticResource ErrorRed}" />
+    <SolidColorBrush x:Key="SuccessBrush" Color="{StaticResource SuccessGreen}" />
+    <SolidColorBrush x:Key="WarningBrush" Color="{StaticResource WarningAmber}" />
+    <SolidColorBrush x:Key="GlassBorder" Color="#282A3A60" />
+
+    <LinearGradientBrush x:Key="GlassPanelBg" StartPoint="0%,0%" EndPoint="100%,100%">
+      <GradientStop Offset="0.0" Color="#080818" />
+      <GradientStop Offset="1.0" Color="#0E0E28" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="TitleBarBrush" StartPoint="0%,0%" EndPoint="0%,100%">
+      <GradientStop Offset="0.0" Color="#060610" />
+      <GradientStop Offset="0.5" Color="#0A0A1A" />
+      <GradientStop Offset="1.0" Color="#0E0E24" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="AccentGradientBrush" StartPoint="0%,0%" EndPoint="100%,100%">
+      <GradientStop Offset="0.0" Color="#FF6D3EF5" />
+      <GradientStop Offset="0.5" Color="#FF8B5CF6" />
+      <GradientStop Offset="1.0" Color="#FF9D7AFF" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="ToolbarBtnBg" StartPoint="0%,0%" EndPoint="0%,100%">
+      <GradientStop Offset="0.0" Color="#221A1A30" />
+      <GradientStop Offset="1.0" Color="#161628" />
+    </LinearGradientBrush>
+  </Styles.Resources>
+
+  <Style Selector="Window">
+    <Setter Property="Background" Value="{StaticResource AppBgBrush}" />
+    <Setter Property="FontFamily" Value="Inter, Segoe UI, sans-serif" />
+    <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+  </Style>
+  <Style Selector="TextBlock">
+    <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+  </Style>
+  <Style Selector="TextBlock.secondary">
+    <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+    <Setter Property="FontSize" Value="11" />
+  </Style>
+  <Style Selector="TextBlock.caption">
+    <Setter Property="Foreground" Value="{StaticResource TextDimBrush}" />
+    <Setter Property="FontSize" Value="9" />
+    <Setter Property="LetterSpacing" Value="2" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+  <Style Selector="TextBlock.title">
+    <Setter Property="Foreground" Value="{StaticResource AccentLightBrush}" />
+    <Setter Property="FontSize" Value="14" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="LetterSpacing" Value="4" />
+  </Style>
+  <Style Selector="Slider">
+    <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+    <Setter Property="Background" Value="{StaticResource ControlBgBrush}" />
+  </Style>
+  <Style Selector="TextBox">
+    <Setter Property="Background" Value="#1A161630" />
+    <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+    <Setter Property="BorderBrush" Value="{StaticResource ControlBorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="8" />
+    <Setter Property="Padding" Value="14,10" />
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="CaretBrush" Value="{StaticResource AccentLightBrush}" />
+  </Style>
+  <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+    <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+  </Style>
+  <Style Selector="Button">
+    <Setter Property="Background" Value="{StaticResource ToolbarBtnBg}" />
+    <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+    <Setter Property="BorderBrush" Value="{StaticResource GlassBorder}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="6" />
+    <Setter Property="Padding" Value="12,6" />
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="Cursor" Value="Hand" />
+  </Style>
+  <Style Selector="Button:pointerover">
+    <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+    <Setter Property="Background" Value="#2A1A1A30" />
+  </Style>
+  <Style Selector="Button:pressed /template/ ContentPresenter">
+    <Setter Property="Opacity" Value="0.7" />
+  </Style>
+  <Style Selector="Button.primary">
+    <Setter Property="Background" Value="{StaticResource AccentGradientBrush}" />
+    <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="CornerRadius" Value="8" />
+    <Setter Property="Padding" Value="24,10" />
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="Cursor" Value="Hand" />
+  </Style>
+  <Style Selector="Button.toolbar-icon">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="CornerRadius" Value="6" />
+    <Setter Property="Width" Value="32" />
+    <Setter Property="Height" Value="32" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="FontSize" Value="15" />
+    <Setter Property="Cursor" Value="Hand" />
+  </Style>
+  <Style Selector="Button.toolbar-icon:pointerover">
+    <Setter Property="Background" Value="#221A1A30" />
+  </Style>
+  <Style Selector="ComboBox">
+    <Setter Property="Background" Value="#1A161630" />
+    <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+    <Setter Property="BorderBrush" Value="{StaticResource ControlBorderBrush}" />
+    <Setter Property="CornerRadius" Value="6" />
+    <Setter Property="Padding" Value="10,6" />
+    <Setter Property="FontSize" Value="11" />
+  </Style>
+  <Style Selector="ComboBox:pointerover">
+    <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+  </Style>
+  <Style Selector="ProgressBar">
+    <Setter Property="Background" Value="{StaticResource ControlBgBrush}" />
+    <Setter Property="Foreground" Value="{StaticResource AccentGradientBrush}" />
+    <Setter Property="CornerRadius" Value="2" />
+    <Setter Property="Height" Value="2" />
+  </Style>
+  <Style Selector="Separator">
+    <Setter Property="Background" Value="{StaticResource ControlBorderBrush}" />
+    <Setter Property="Height" Value="1" />
+    <Setter Property="Margin" Value="0,6" />
+  </Style>
+  <Style Selector="ScrollViewer">
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+  <Style Selector="ToggleSwitch">
+    <Setter Property="OffContent" Value="" />
+    <Setter Property="OnContent" Value="" />
+    <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+  </Style>
+</Styles>
